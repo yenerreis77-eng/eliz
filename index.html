@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>ELİZ ❤️</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #010006;
+}
+
+canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d", {
+    alpha: false
+});
+
+let W, H, CX, CY;
+
+function resize() {
+
+    const dpr = Math.min(
+        window.devicePixelRatio || 1,
+        1.5
+    );
+
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+
+    ctx.setTransform(
+        dpr, 0, 0, dpr, 0, 0
+    );
+
+    CX = W / 2;
+    CY = H / 2;
+}
+
+resize();
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+
+// ================================
+// AYARLAR
+// ================================
+
+const COUNT = 85;
+
+const phrases = [
+    "I LOVE YOU",
+    "I LOVE YOU",
+    "I LOVE YOU",
+    "I LOVE YOU",
+    "TE AMO"
+];
+
+const words = [];
+
+
+// ================================
+// YAZILARI OLUŞTUR
+// ================================
+
+for (let i = 0; i < COUNT; i++) {
+
+    words.push({
+
+        x:
+            (Math.random() - 0.5) * 2,
+
+        y:
+            (Math.random() - 0.5) * 2,
+
+        z:
+            Math.random(),
+
+        speed:
+            0.0015 +
+            Math.random() * 0.0025,
+
+        text:
+            phrases[
+                Math.floor(
+                    Math.random() *
+                    phrases.length
+                )
+            ],
+
+        size:
+            12 +
+            Math.random() * 9
+
+    });
+}
+
+
+// ================================
+// YILDIZLAR
+// ================================
+
+const stars = [];
+
+for (let i = 0; i < 100; i++) {
+
+    stars.push({
+
+        x:
+            Math.random() * W,
+
+        y:
+            Math.random() * H,
+
+        a:
+            Math.random(),
+
+        r:
+            Math.random() * 1.5
+
+    });
+}
+
+
+// ================================
+// BAŞLANGIÇ
+// ================================
+
+const start =
+    performance.now();
+
+
+// ================================
+// ANİMASYON
+// ================================
+
+function animate(now) {
+
+    const time =
+        (now - start) / 1000;
+
+
+    // --------------------------------
+    // ARKA PLAN
+    // --------------------------------
+
+    ctx.fillStyle = "#010006";
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    // --------------------------------
+    // YILDIZLAR
+    // --------------------------------
+
+    for (let i = 0; i < stars.length; i++) {
+
+        const s = stars[i];
+
+        ctx.globalAlpha =
+            s.a * 0.5;
+
+        ctx.fillStyle =
+            "#ffffff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            s.x,
+            s.y,
+            s.r,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+
+
+    // --------------------------------
+    // HIZLANMA
+    // --------------------------------
+
+    const acceleration =
+        Math.pow(
+            Math.min(
+                time / 11,
+                1
+            ),
+            2
+        );
+
+
+    // --------------------------------
+    // YAZILAR
+    // --------------------------------
+
+    for (let i = 0; i < words.length; i++) {
+
+        const p = words[i];
+
+        const oldZ =
+            p.z;
+
+
+        p.z -=
+            (
+                p.speed *
+                (0.35 +
+                acceleration * 7)
+            );
+
+
+        // yeniden arkaya gönder
+
+        if (p.z <= 0.01) {
+
+            p.z = 1;
+
+            p.x =
+                (Math.random() - 0.5) * 2;
+
+            p.y =
+                (Math.random() - 0.5) * 2;
+
+            p.text =
+                phrases[
+                    Math.floor(
+                        Math.random() *
+                        phrases.length
+                    )
+                ];
+        }
+
+
+        // --------------------------------
+        // PERSPEKTİF
+        // --------------------------------
+
+        const perspective =
+            1 / p.z;
+
+
+        const spread =
+            Math.min(
+                W,
+                H
+            ) * 0.65;
+
+
+        const x =
+            CX +
+            p.x *
+            spread *
+            perspective;
+
+
+        const y =
+            CY +
+            p.y *
+            spread *
+            perspective;
+
+
+        // --------------------------------
+        // BOYUT
+        // --------------------------------
+
+        const size =
+            Math.min(
+                48,
+                p.size *
+                perspective *
+                0.18
+            );
+
+
+        // ekran dışındaysa çizme
+
+        if (
+            x < -300 ||
+            x > W + 300 ||
+            y < -300 ||
+            y > H + 300
+        ) {
+            continue;
+        }
+
+
+        // --------------------------------
+        // HIZ İZİ
+        // --------------------------------
+
+        const previousPerspective =
+            1 / Math.max(
+                oldZ,
+                0.01
+            );
+
+
+        const oldX =
+            CX +
+            p.x *
+            spread *
+            previousPerspective;
+
+
+        const oldY =
+            CY +
+            p.y *
+            spread *
+            previousPerspective;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            oldX,
+            oldY
+        );
+
+        ctx.lineTo(
+            x,
+            y
+        );
+
+        ctx.lineWidth =
+            Math.min(
+                3,
+                size / 10
+            );
+
+        ctx.strokeStyle =
+            "rgba(255,0,210,0.18)";
+
+        ctx.stroke();
+
+
+        // --------------------------------
+        // YAZI
+        // --------------------------------
+
+        ctx.save();
+
+        ctx.translate(
+            x,
+            y
+        );
+
+
+        ctx.font =
+            "bold " +
+            Math.max(
+                7,
+                size
+            ) +
+            "px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+        ctx.textBaseline =
+            "middle";
+
+
+        ctx.shadowBlur =
+            Math.min(
+                25,
+                size
+            );
+
+        ctx.shadowColor =
+            "#ff00d4";
+
+
+        ctx.fillStyle =
+            "rgba(255,55,220," +
+            Math.min(
+                1,
+                perspective * 0.8
+            ) +
+            ")";
+
+
+        ctx.fillText(
+            p.text,
+            0,
+            0
+        );
+
+
+        ctx.restore();
+    }
+
+
+    // --------------------------------
+    // MERKEZ IŞIĞI
+    // --------------------------------
+
+    const glow =
+        ctx.createRadialGradient(
+            CX,
+            CY,
+            0,
+            CX,
+            CY,
+            Math.min(W, H) * 0.45
+        );
+
+    glow.addColorStop(
+        0,
+        "rgba(255,0,220,0.13)"
+    );
+
+    glow.addColorStop(
+        0.35,
+        "rgba(160,0,160,0.04)"
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+    ctx.fillStyle =
+        glow;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    // --------------------------------
+    // ELİZ
+    // --------------------------------
+
+    if (time > 11.5) {
+
+        const progress =
+            Math.min(
+                1,
+                (time - 11.5) / 2
+            );
+
+
+        // tüneli karart
+
+        ctx.fillStyle =
+            "rgba(1,0,6," +
+            (progress * 0.8) +
+            ")";
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+
+        ctx.save();
+
+        ctx.globalAlpha =
+            progress;
+
+
+        ctx.translate(
+            CX,
+            CY
+        );
+
+
+        const scale =
+            0.15 +
+            progress * 0.85;
+
+
+        ctx.scale(
+            scale,
+            scale
+        );
+
+
+        ctx.textAlign =
+            "center";
+
+        ctx.textBaseline =
+            "middle";
+
+
+        ctx.font =
+            "900 " +
+            Math.min(
+                220,
+                W * 0.2
+            ) +
+            "px Arial";
+
+
+        // dış parlama
+
+        ctx.shadowBlur =
+            60;
+
+        ctx.shadowColor =
+            "#ff00d4";
+
+
+        ctx.fillStyle =
+            "#ff38dc";
+
+
+        ctx.fillText(
+            "ELİZ",
+            0,
+            0
+        );
+
+
+        // ikinci parlama
+
+        ctx.shadowBlur =
+            15;
+
+        ctx.shadowColor =
+            "#ffffff";
+
+        ctx.fillStyle =
+            "#ffb5f4";
+
+
+        ctx.globalAlpha =
+            progress * 0.35;
+
+
+        ctx.fillText(
+            "ELİZ",
+            0,
+            0
+        );
+
+
+        ctx.restore();
+    }
+
+
+    requestAnimationFrame(
+        animate
+    );
+}
+
+
+requestAnimationFrame(
+    animate
+);
+
+</script>
+
+</body>
+</html>
